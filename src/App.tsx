@@ -1,111 +1,91 @@
 import { useMemo, useState } from "react";
 import {
-  ArrowDownUp, ArrowUpRight, BarChart3, ChevronDown, Compass,
-  Flame, Globe2, Layers3, Menu, Plus, Search, ShieldCheck,
-  Sparkles, Wallet, X
+  ArrowDown, ArrowDownUp, ArrowLeftRight, ArrowUpRight, BarChart3, ChevronDown,
+  CircleHelp, Compass, Copy, ExternalLink, Flame, Globe2, Layers3, Menu, Plus,
+  Search, ShieldCheck, Sparkles, Wallet, X, Zap, Clock3, UserRound, Activity,
+  Droplets, Rocket, BookOpen, Settings2, TrendingUp, CircleDollarSign
 } from "lucide-react";
 
-type Token = {
-  symbol: string;
-  name: string;
-  address: string;
-  price: string;
-  change: string;
-  positive: boolean;
-  volume: string;
-  liquidity: string;
-  cap: string;
-  initials: string;
-  hue: string;
-  tag: string;
-};
-
-const tokens: Token[] = [
-  { symbol: "ATLAS", name: "Atlas Protocol", address: "0x83a…9f21", price: "$0.00482", change: "+18.42%", positive: true, volume: "$284.6K", liquidity: "$91.2K", cap: "$4.82M", initials: "A", hue: "violet", tag: "New" },
-  { symbol: "NOVA", name: "Nova Network", address: "0x2bd…1a70", price: "$0.01831", change: "+12.08%", positive: true, volume: "$192.1K", liquidity: "$74.8K", cap: "$18.3M", initials: "N", hue: "blue", tag: "Trending" },
-  { symbol: "ORBIT", name: "Orbit Finance", address: "0x91c…d420", price: "$0.00214", change: "-4.31%", positive: false, volume: "$86.4K", liquidity: "$32.5K", cap: "$2.14M", initials: "O", hue: "orange", tag: "DEX" },
-  { symbol: "PULSE", name: "Pulse Labs", address: "0xf04…8b19", price: "$0.09120", change: "+8.76%", positive: true, volume: "$510.8K", liquidity: "$208.4K", cap: "$9.12M", initials: "P", hue: "green", tag: "Gainer" },
-  { symbol: "MINT", name: "Mint Club", address: "0xa72…3c81", price: "$0.00086", change: "-2.14%", positive: false, volume: "$42.7K", liquidity: "$18.9K", cap: "$860K", initials: "M", hue: "pink", tag: "New" }
+type Page = "explore" | "launch" | "bridge" | "pools" | "portfolio" | "profile" | "analytics" | "docs" | "token";
+type Token = { symbol:string; name:string; address:string; price:string; change:number; volume:string; liquidity:string; cap:string; chain:string; tag:string; color:string };
+const tokens:Token[] = [
+ {symbol:"ATLAS",name:"Atlas Protocol",address:"0x83a…9f21",price:"$0.00482",change:18.42,volume:"$284.6K",liquidity:"$91.2K",cap:"$4.82M",chain:"Robinhood",tag:"New",color:"violet"},
+ {symbol:"NOVA",name:"Nova Network",address:"0x2bd…1a70",price:"$0.01831",change:12.08,volume:"$192.1K",liquidity:"$74.8K",cap:"$18.3M",chain:"Base",tag:"Trending",color:"blue"},
+ {symbol:"ORBIT",name:"Orbit Finance",address:"0x91c…d420",price:"$0.00214",change:-4.31,volume:"$86.4K",liquidity:"$32.5K",cap:"$2.14M",chain:"Robinhood",tag:"DEX",color:"orange"},
+ {symbol:"PULSE",name:"Pulse Labs",address:"0xf04…8b19",price:"$0.09120",change:8.76,volume:"$510.8K",liquidity:"$208.4K",cap:"$9.12M",chain:"BNB",tag:"Gainer",color:"green"},
+ {symbol:"MINT",name:"Mint Club",address:"0xa72…3c81",price:"$0.00086",change:-2.14,volume:"$42.7K",liquidity:"$18.9K",cap:"$860K",chain:"Ethereum",tag:"New",color:"pink"},
+ {symbol:"WAVE",name:"Wave Finance",address:"0x18e…aa02",price:"$0.03150",change:24.8,volume:"$740.2K",liquidity:"$320.1K",cap:"$31.5M",chain:"Base",tag:"Trending",color:"cyan"},
 ];
+const chains = ["Robinhood Chain","Base","BNB Chain","Ethereum","Solana"];
+const marketTabs = ["Trending","New","Gainers","Losers","Market Cap","Volume","Liquidity"];
+const navItems:{id:Page;label:string;icon:any}[] = [
+ {id:"explore",label:"Explore",icon:Compass},{id:"launch",label:"Launch",icon:Rocket},{id:"bridge",label:"Bridge",icon:ArrowLeftRight},
+ {id:"pools",label:"Pools",icon:Droplets},{id:"portfolio",label:"Portfolio",icon:Layers3},{id:"analytics",label:"Analytics",icon:BarChart3}
+];
+declare global { interface Window { ethereum?: { request:(args:{method:string;params?:unknown[]})=>Promise<any> } } }
 
-const tabs = ["Trending", "New", "Gainers", "Losers", "Market Cap", "Volume", "Liquidity"];
-
-function App() {
-  const [activeTab, setActiveTab] = useState("Trending");
-  const [query, setQuery] = useState("");
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const filtered = useMemo(() => {
-    let list = tokens.filter((token) => (token.name + token.symbol).toLowerCase().includes(query.toLowerCase()));
-    if (activeTab === "Gainers") list = list.filter((token) => token.positive);
-    if (activeTab === "Losers") list = list.filter((token) => !token.positive);
-    if (activeTab === "New") list = list.filter((token) => token.tag === "New");
-    if (activeTab === "Market Cap") list = [...list].sort((a, b) => Number(b.cap.replace(/[$,MK]/g, "")) - Number(a.cap.replace(/[$,MK]/g, "")));
-    return list;
-  }, [activeTab, query]);
-
-  return (
-    <div className="min-h-screen bg-atlas-bg text-white">
-      <header className="sticky top-0 z-30 border-b border-atlas-line/80 bg-atlas-bg/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 lg:px-10">
-          <a href="#" className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-400 to-indigo-600 shadow-glow"><Layers3 size={21} /></div>
-            <div><div className="text-lg font-bold tracking-[0.18em]">ATLAS</div><div className="-mt-1 text-[9px] tracking-[0.28em] text-atlas-muted">OPEN FINANCE</div></div>
-          </a>
-          <nav className="hidden items-center gap-8 text-sm text-slate-400 md:flex">
-            <a className="nav-active" href="#explore">Explore</a><a href="#launch">Launch</a><a href="#pools">Pools</a><a href="#analytics">Analytics</a>
-          </nav>
-          <div className="hidden items-center gap-3 md:flex">
-            <button className="chain-button"><Globe2 size={15} /> Robinhood <ChevronDown size={14} /></button>
-            <button className="wallet-button"><Wallet size={16} /> Connect Wallet</button>
-          </div>
-          <button className="rounded-lg border border-atlas-line p-2 md:hidden" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Toggle menu">{mobileMenu ? <X /> : <Menu />}</button>
-        </div>
-        {mobileMenu && <div className="border-t border-atlas-line px-5 py-4 md:hidden"><div className="flex flex-col gap-4 text-sm text-slate-300"><a href="#explore">Explore</a><a href="#launch">Launch</a><a href="#pools">Pools</a><a href="#analytics">Analytics</a><button className="wallet-button w-full"><Wallet size={16} /> Connect Wallet</button></div></div>}
-      </header>
-
-      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-10 lg:px-10 lg:pt-14">
-        <section className="relative overflow-hidden rounded-3xl border border-atlas-line bg-gradient-to-br from-[#17182d] via-[#111521] to-[#101724] px-6 py-9 md:px-10 md:py-12">
-          <div className="hero-orb orb-one" /><div className="hero-orb orb-two" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-400/10 px-3 py-1.5 text-xs text-violet-200"><Sparkles size={13} /> THE MULTI-CHAIN TOKEN ECOSYSTEM</div>
-            <h1 className="text-4xl font-semibold leading-[1.12] tracking-tight md:text-6xl">Discover what’s <span className="gradient-text">next.</span></h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400 md:text-base">Explore emerging tokens, launch your project, and trade across decentralized markets — all in one place.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><a href="#explore" className="primary-button"><Compass size={16} /> Explore tokens <ArrowUpRight size={15} /></a><a href="#launch" className="secondary-button"><Plus size={16} /> Launch a token</a></div>
-          </div>
-          <div className="relative z-10 mt-10 grid max-w-2xl grid-cols-3 gap-3 md:absolute md:bottom-10 md:right-10 md:mt-0 md:w-[440px]">
-            {[["Live markets","—"],["Listed tokens","—"],["24h volume","—"]].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur"><div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div><div className="mt-2 text-xl font-semibold">{value}</div><div className="mt-1 text-[10px] text-slate-600">Awaiting live data</div></div>)}
-          </div>
-        </section>
-
-        <section id="explore" className="pt-14">
-          <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><div className="section-kicker"><Flame size={13} /> MARKET DISCOVERY</div><h2 className="mt-2 text-2xl font-semibold md:text-3xl">Explore tokens</h2><p className="mt-2 text-sm text-atlas-muted">Find your next opportunity across the ecosystem.</p></div><div className="relative w-full sm:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or ticker..." className="search-input w-full" /></div></div>
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-2">{tabs.map((tab) => <button key={tab} onClick={() => setActiveTab(tab)} className={`tab-button whitespace-nowrap ${activeTab === tab ? "tab-selected" : ""}`}>{tab}</button>)}</div>
-          <div className="overflow-hidden rounded-2xl border border-atlas-line bg-atlas-panel/70">
-            <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 border-b border-atlas-line px-6 py-4 text-[10px] font-medium uppercase tracking-wider text-slate-500 md:grid"><span>Token</span><span>Price</span><span>24h change</span><span>Volume</span><span>Market cap</span></div>
-            {filtered.map((token) => <div key={token.symbol} className="grid grid-cols-2 items-center gap-3 border-b border-atlas-line/70 px-4 py-4 last:border-0 hover:bg-white/[0.025] md:grid-cols-[2fr_1fr_1fr_1fr_1fr] md:gap-4 md:px-6">
-              <div className="flex min-w-0 items-center gap-3"><div className={`token-avatar avatar-${token.hue}`}>{token.initials}</div><div className="min-w-0"><div className="flex items-center gap-2"><span className="font-semibold">{token.symbol}</span><span className="hidden rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-slate-500 sm:inline">{token.tag}</span></div><div className="truncate text-xs text-slate-500">{token.name} · {token.address}</div></div></div>
-              <div><div className="text-sm font-medium">{token.price}</div><div className="text-[10px] text-slate-600 md:hidden">Price</div></div>
-              <div className={token.positive ? "text-sm font-medium text-atlas-green" : "text-sm font-medium text-rose-400"}>{token.change}<div className="text-[10px] font-normal text-slate-600 md:hidden">24h</div></div>
-              <div className="hidden text-sm text-slate-300 md:block">{token.volume}</div><div className="hidden text-sm text-slate-300 md:block">{token.cap}</div>
-            </div>)}
-            {filtered.length === 0 && <div className="p-10 text-center text-sm text-slate-500">No matching tokens in this demo dataset.</div>}
-            <div className="flex items-center justify-between border-t border-atlas-line px-5 py-4 text-xs text-slate-500"><span>Sample interface data · live market feed not connected</span><span>{filtered.length} assets</span></div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 pt-12 md:grid-cols-3">
-          <FeatureCard id="launch" icon={<Plus size={18} />} title="Launch a token" description="Create and configure a token launch with transparent settings and creator rewards." />
-          <FeatureCard id="pools" icon={<ArrowDownUp size={18} />} title="Liquidity pools" description="Explore pools, review liquidity depth, and manage positions across supported chains." />
-          <FeatureCard id="analytics" icon={<BarChart3 size={18} />} title="Market analytics" description="Track token activity, volume, holders, and market movements in one dashboard." />
-        </section>
-        <footer className="mt-16 flex flex-col justify-between gap-3 border-t border-atlas-line pt-7 text-xs text-slate-600 md:flex-row"><span>© 2026 Atlas Protocol. Built for open markets.</span><span className="flex items-center gap-2"><ShieldCheck size={13} /> Test interface · No wallet or trading actions enabled</span></footer>
-      </main>
-    </div>
-  );
+export default function App() {
+ const [page,setPage] = useState<Page>("explore");
+ const [tab,setTab] = useState("Trending");
+ const [query,setQuery] = useState("");
+ const [chain,setChain] = useState("Robinhood Chain");
+ const [wallet,setWallet] = useState("");
+ const [walletBusy,setWalletBusy] = useState(false);
+ const [mobileMenu,setMobileMenu] = useState(false);
+ const [selected,setSelected] = useState<Token>(tokens[0]);
+ const [notice,setNotice] = useState("");
+ const [fromChain,setFromChain] = useState("Robinhood Chain");
+ const [toChain,setToChain] = useState("Base");
+ const [bridgeAmount,setBridgeAmount] = useState("");
+ const [launchName,setLaunchName] = useState("");
+ const [launchTicker,setLaunchTicker] = useState("");
+ const [launchDescription,setLaunchDescription] = useState("");
+ const [launchChains,setLaunchChains] = useState<string[]>(["Robinhood Chain","Base"]);
+ const [fee,setFee] = useState("1");
+ const [pair,setPair] = useState("Native coin");
+ const [slippage,setSlippage] = useState("1");
+ const filtered = useMemo(()=>{
+   let list=tokens.filter(t=>(t.name+" "+t.symbol+" "+t.address).toLowerCase().includes(query.toLowerCase()));
+   if(tab==="Gainers") list=list.filter(t=>t.change>0);
+   if(tab==="Losers") list=list.filter(t=>t.change<0);
+   if(tab==="New") list=list.filter(t=>t.tag==="New");
+   if(tab==="Trending") list=[...list].sort((a,b)=>Math.abs(b.change)-Math.abs(a.change));
+   if(tab==="Market Cap") list=[...list].sort((a,b)=>parseFloat(b.cap.replace(/[$MK]/g,""))-parseFloat(a.cap.replace(/[$MK]/g,"")));
+   return list;
+ },[tab,query]);
+ const go=(p:Page)=>{setPage(p);setMobileMenu(false);setNotice("");window.location.hash=p;window.scrollTo({top:0,behavior:"smooth"});};
+ const connect=async()=>{
+   if(!window.ethereum){setNotice("No EVM wallet found. Open Atlas in a browser with MetaMask or another injected wallet.");return;}
+   try{setWalletBusy(true);const accounts=await window.ethereum.request({method:"eth_requestAccounts"});if(accounts?.[0]){setWallet(accounts[0]);setNotice("Wallet connected. Trading remains disabled until the audited contracts and live market adapter are integrated.");}}
+   catch(e){setNotice("Wallet connection was cancelled or failed.");}finally{setWalletBusy(false);}
+ };
+ const openToken=(t:Token)=>{setSelected(t);go("token");};
+ const toggleLaunchChain=(c:string)=>setLaunchChains(prev=>prev.includes(c)?prev.filter(x=>x!==c):[...prev,c]);
+ const Header=()=> <header className="site-header"><div className="header-inner">
+   <button className="brand" onClick={()=>go("explore")}><span className="brand-mark"><Layers3 size={21}/></span><span><b>ATLAS</b><small>OPEN FINANCE</small></span></button>
+   <nav className="desktop-nav">{navItems.map(n=><button key={n.id} onClick={()=>go(n.id)} className={page===n.id?"nav-link active":"nav-link"}>{n.label}</button>)}</nav>
+   <div className="header-actions"><select className="chain-select" value={chain} onChange={e=>setChain(e.target.value)}>{chains.map(c=><option key={c}>{c}</option>)}</select><button className="wallet-button" onClick={connect} disabled={walletBusy}><Wallet size={16}/>{wallet?wallet.slice(0,6)+"…"+wallet.slice(-4):walletBusy?"Connecting…":"Connect Wallet"}</button><button className="icon-button mobile-toggle" onClick={()=>setMobileMenu(!mobileMenu)} aria-label="Menu">{mobileMenu?<X/>:<Menu/>}</button></div>
+ </div>{mobileMenu&&<div className="mobile-nav">{navItems.map(n=><button key={n.id} onClick={()=>go(n.id)}><n.icon size={16}/>{n.label}</button>)}<button onClick={()=>go("profile")}><UserRound size={16}/>Profile</button><button onClick={()=>go("docs")}><BookOpen size={16}/>Docs</button></div>}</header>;
+ const Footer=()=> <footer className="site-footer"><span>© 2026 Atlas Protocol</span><div><button onClick={()=>go("docs")}>Docs</button><button onClick={()=>go("profile")}>Profile</button><span><ShieldCheck size={13}/> Test interface · on-chain actions not enabled</span></div></footer>;
+ const TokenTable=()=> <div className="table-wrap"><div className="token-head"><span>Token</span><span>Price</span><span>24h change</span><span>Volume</span><span>Liquidity</span><span>Market cap</span></div>{filtered.map(t=><button key={t.symbol} className="token-row" onClick={()=>openToken(t)}><span className="token-id"><i className={"token-avatar "+t.color}>{t.symbol[0]}</i><span><b>{t.symbol}</b><small>{t.name} · {t.address}</small></span></span><span>{t.price}</span><span className={t.change>=0?"positive":"negative"}>{t.change>0?"+":""}{t.change.toFixed(2)}%</span><span>{t.volume}</span><span>{t.liquidity}</span><span>{t.cap}</span></button>)}{filtered.length===0&&<div className="empty-state">No tokens match this search.</div>}<div className="table-foot">Demo dataset · live indexer is not connected <span>{filtered.length} assets</span></div></div>;
+ const Explore=()=> <><section className="hero-panel"><div className="hero-glow"/><div className="hero-copy"><span className="eyebrow"><Sparkles size={13}/> THE MULTI-CHAIN TOKEN ECOSYSTEM</span><h1>One place to find<br/><em>what’s next.</em></h1><p>Discover new tokens, launch your project, bridge assets and explore decentralized markets across supported chains.</p><div className="hero-buttons"><button className="primary-button" onClick={()=>document.getElementById("markets")?.scrollIntoView({behavior:"smooth"})}><Compass size={16}/>Explore markets <ArrowUpRight size={15}/></button><button className="outline-button" onClick={()=>go("launch")}><Plus size={16}/>Launch a coin</button></div></div><div className="hero-stats"><Stat label="Live pools" value="—"/><Stat label="Listed tokens" value="—"/><Stat label="24h volume" value="—"/></div></section>
+ <section className="quick-actions"><button onClick={()=>go("launch")}><Rocket/><b>Launch a coin</b><small>Create a token</small><ArrowUpRight/></button><button onClick={()=>go("bridge")}><ArrowLeftRight/><b>Bridge assets</b><small>Move across chains</small><ArrowUpRight/></button><button onClick={()=>go("pools")}><Droplets/><b>Explore pools</b><small>Liquidity markets</small><ArrowUpRight/></button><button onClick={()=>go("analytics")}><Activity/><b>Live analytics</b><small>Market activity</small><ArrowUpRight/></button></section>
+ <section id="markets" className="content-section"><div className="section-top"><div><span className="eyebrow"><Flame size={13}/> MARKET DISCOVERY</span><h2>Explore tokens</h2><p>Find and compare tokens across the Atlas ecosystem.</p></div><div className="search-box"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search name, ticker or address…"/></div></div><div className="tabs">{marketTabs.map(x=><button key={x} onClick={()=>setTab(x)} className={tab===x?"selected":""}>{x}</button>)}</div><TokenTable/></section>
+ <section className="content-section"><div className="section-top"><div><span className="eyebrow">ECOSYSTEM</span><h2>Explore Atlas</h2><p>Tools for launching, trading and managing digital assets.</p></div></div><div className="feature-grid"><Feature icon={<Rocket/>} title="Token launch" text="Configure token details, supported chains and launch parameters." onClick={()=>go("launch")}/><Feature icon={<ArrowLeftRight/>} title="Cross-chain bridge" text="Review a transfer route, amount and estimated fees." onClick={()=>go("bridge")}/><Feature icon={<Droplets/>} title="Liquidity pools" text="Browse pools and liquidity depth by chain." onClick={()=>go("pools")}/></div></section></>;
+ const Launch=()=> <><PageIntro kicker="TOKEN FACTORY" title="Launch a coin" text="Configure your token and review launch settings. No transaction will be sent in this prototype."/><div className="two-column"><section className="panel form-panel"><h3>Token details</h3><label>Token name<input value={launchName} onChange={e=>setLaunchName(e.target.value)} placeholder="e.g. Atlas Community"/></label><label>Token ticker<input value={launchTicker} onChange={e=>setLaunchTicker(e.target.value.toUpperCase().slice(0,12))} placeholder="e.g. ATC"/></label><label>Description<textarea value={launchDescription} onChange={e=>setLaunchDescription(e.target.value)} placeholder="What is your token about?"/></label><label>Token image<input type="file" accept="image/*" onChange={()=>setNotice("Image upload UI is ready; secure storage integration is still required.")}/></label><h3 className="form-subhead">Launch chains</h3><p className="muted">Select the networks for your launch.</p><div className="chain-checks">{chains.map(c=><label key={c} className="check-card"><input type="checkbox" checked={launchChains.includes(c)} onChange={()=>toggleLaunchChain(c)}/><span>{c}</span></label>)}</div><div className="form-grid"><label>Trading fee<select value={fee} onChange={e=>setFee(e.target.value)}>{["0.3","0.5","1","2","3","5"].map(x=><option value={x}>{x}%</option>)}</select></label><label>Pair asset<select value={pair} onChange={e=>setPair(e.target.value)}><option>Native coin</option><option>Stablecoin (planned)</option><option>Custom token (planned)</option></select></label></div><button className="primary-button wide" onClick={()=>setNotice(!launchName||!launchTicker?"Enter a token name and ticker first.":launchChains.length<2?"Select at least two chains.": "Preview created: "+launchName+" ($"+launchTicker+") · "+launchChains.length+" chains · "+fee+"% fee. Wallet deployment is not yet enabled.")}>Review launch <ArrowUpRight size={16}/></button></section><aside className="panel summary-panel"><span className="eyebrow">LAUNCH SUMMARY</span><h3>{launchName||"Your token"} <small>{launchTicker?"$"+launchTicker:"$TICKER"}</small></h3><p>{launchDescription||"Your token description will appear here."}</p><SummaryLine label="Networks" value={launchChains.length+" selected"}/><SummaryLine label="Trading fee" value={fee+"%"}/><SummaryLine label="Pair asset" value={pair}/><SummaryLine label="Initial liquidity" value="Not calculated"/><div className="notice-box"><ShieldCheck size={16}/> Live launch is disabled until contracts, fees, liquidity and chain integrations are verified and audited.</div></aside></div></>;
+ const Bridge=()=> <><PageIntro kicker="CROSS-CHAIN TRANSFERS" title="Bridge" text="Move supported assets between networks. Select a route to preview the transfer details."/><div className="bridge-layout"><section className="panel bridge-panel"><div className="bridge-chain"><div className="field-caption">FROM</div><select value={fromChain} onChange={e=>setFromChain(e.target.value)}>{chains.map(c=><option>{c}</option>)}</select><label>Amount<input value={bridgeAmount} onChange={e=>setBridgeAmount(e.target.value)} placeholder="0.00" inputMode="decimal"/></label><small>Balance: Connect wallet to read</small></div><button className="swap-direction" onClick={()=>{setFromChain(toChain);setToChain(fromChain)}} aria-label="Reverse chains"><ArrowDownUp/></button><div className="bridge-chain"><div className="field-caption">TO</div><select value={toChain} onChange={e=>setToChain(e.target.value)}>{chains.filter(c=>c!==fromChain).map(c=><option>{c}</option>)}</select><div className="receive-amount">{bridgeAmount||"0.00"} <small>Estimated amount before fees</small></div></div><div className="route-details"><SummaryLine label="Route" value={fromChain+" → "+toChain}/><SummaryLine label="Bridge fee" value="Quote unavailable"/><SummaryLine label="Network fee" value="Quote unavailable"/><SummaryLine label="Estimated arrival" value="Not available"/></div><button className="primary-button wide" onClick={()=>setNotice(!wallet?"Connect your wallet to continue.":"Bridge quotes and transactions are not enabled yet; no funds will be moved.")}>Connect wallet to bridge <ArrowUpRight size={16}/></button></section><aside className="panel"><h3>How bridging works</h3><p className="muted">Choose the token, source chain and destination chain. Atlas will show the route, fees and expected amount before any wallet signature.</p><div className="steps"><Step n="1" title="Choose an asset" text="Select a token supported on both networks."/><Step n="2" title="Review the quote" text="Check bridge fees, network costs and arrival amount."/><Step n="3" title="Confirm in wallet" text="Sign only after reviewing all transaction details."/></div></aside></div></>;
+ const Pools=()=> <><PageIntro kicker="LIQUIDITY MARKETS" title="Pools" text="Browse liquidity pools and compare volume, liquidity and fees."/><div className="metric-grid"><Stat label="Total liquidity" value="—"/><Stat label="24h volume" value="—"/><Stat label="Active pools" value="—"/></div><div className="section-top pool-heading"><div><h2>All pools</h2><p>Pool data will appear when the chain indexer is connected.</p></div><select className="filter-select"><option>All chains</option>{chains.map(c=><option>{c}</option>)}</select></div><div className="table-wrap"><div className="token-head pool-head"><span>Pool</span><span>Chain</span><span>Liquidity</span><span>24h volume</span><span>Fee</span><span>Action</span></div>{tokens.map(t=><div className="token-row pool-row" key={t.symbol}><span className="token-id"><i className={"token-avatar "+t.color}>{t.symbol[0]}</i><span><b>{t.symbol} / Native</b><small>{t.name}</small></span></span><span>{t.chain}</span><span>{t.liquidity}</span><span>{t.volume}</span><span>—</span><button className="text-action" onClick={()=>{setSelected(t);go("token")}}>View pool <ArrowUpRight size={13}/></button></div>)}</div></>;
+ const Portfolio=()=> <><PageIntro kicker="YOUR ASSETS" title="Portfolio" text="Track your tokens, liquidity positions and cross-chain activity."/><div className="portfolio-empty panel"><div className="empty-icon"><Wallet/></div><h3>{wallet?"Wallet connected":"Connect your wallet"}</h3><p>{wallet?"Your on-chain balances will appear here when portfolio indexing is enabled.":"Connect an EVM wallet to view balances and activity across supported chains."}</p><button className="primary-button" onClick={connect}><Wallet size={16}/>{wallet?"Refresh portfolio":"Connect Wallet"}</button></div><div className="feature-grid"><Feature icon={<Layers3/>} title="Token balances" text="Assets by network." onClick={()=>setNotice("Portfolio token indexing is not yet connected.")}/><Feature icon={<Droplets/>} title="LP positions" text="Liquidity you have supplied." onClick={()=>setNotice("LP position indexing is not yet connected.")}/><Feature icon={<Clock3/>} title="Transaction history" text="Recent wallet activity." onClick={()=>setNotice("Transaction history indexing is not yet connected.")}/></div></>;
+ const Profile=()=> <><PageIntro kicker="ACCOUNT" title="Profile" text="Your public creator profile, rewards and preferences."/><div className="profile-card panel"><div className="profile-avatar"><UserRound size={30}/></div><div><h3>{wallet?wallet.slice(0,8)+"…"+wallet.slice(-6):"Wallet not connected"}</h3><p className="muted">Connect a wallet to view your creator profile.</p></div><button className="outline-button" onClick={connect}><Wallet size={15}/>{wallet?"Wallet connected":"Connect wallet"}</button></div><div className="metric-grid"><Stat label="Creator fees" value="—"/><Stat label="Tokens launched" value="—"/><Stat label="Rewards claimable" value="—"/></div><section className="panel rewards-panel"><h3>Creator rewards</h3><p className="muted">Creator fees and reward claims will be displayed here after the fee-splitter contracts and indexer are integrated.</p><button className="outline-button" onClick={()=>setNotice("Creator fee claiming is not enabled yet.")}>Claim rewards <ArrowUpRight size={14}/></button></section></>;
+ const Analytics=()=> <><PageIntro kicker="MARKET INTELLIGENCE" title="Analytics" text="Understand market activity across supported networks."/><div className="metric-grid"><Stat label="Total market cap" value="—"/><Stat label="24h volume" value="—"/><Stat label="Total liquidity" value="—"/></div><div className="analytics-grid"><section className="panel chart-panel"><div className="panel-heading"><div><h3>Market activity</h3><p className="muted">Live chart data pending indexer integration</p></div><select><option>24 hours</option><option>7 days</option><option>30 days</option></select></div><div className="chart-placeholder"><Activity size={30}/><span>Chart will appear when live market data is connected</span></div></section><section className="panel"><h3>Top movers</h3>{tokens.slice(0,5).map(t=><div className="mover-row"><span>{t.symbol}</span><b className={t.change>=0?"positive":"negative"}>{t.change>0?"+":""}{t.change}%</b></div>)}</section></div></>;
+ const TokenPage=()=> <><button className="back-link" onClick={()=>go("explore")}>← Back to Explore</button><div className="token-detail-head panel"><div className="token-id"><i className={"token-avatar large "+selected.color}>{selected.symbol[0]}</i><span><h2>{selected.name} <small>{selected.symbol}</small></h2><p>{selected.address} <button className="copy-button" onClick={()=>setNotice("Address copied when clipboard integration is available.")}><Copy size={13}/></button></p></span></div><button className="primary-button" onClick={()=>setNotice("Swap is disabled until a verified router and live quote source are connected.")}>Trade <ArrowUpRight size={15}/></button></div><div className="metric-grid"><Stat label="Price" value={selected.price}/><Stat label="Market cap" value={selected.cap}/><Stat label="24h volume" value={selected.volume}/><Stat label="Liquidity" value={selected.liquidity}/></div><div className="tabs detail-tabs"><button className="selected">Overview</button><button onClick={()=>setNotice("Chart data not connected.")}>Chart</button><button onClick={()=>setNotice("Trades feed not connected.")}>Trades</button><button onClick={()=>setNotice("Holder index not connected.")}>Holders</button><button onClick={()=>go("bridge")}>Bridge</button></div><div className="analytics-grid"><section className="panel chart-panel"><h3>Price chart</h3><div className="chart-placeholder"><TrendingUp size={30}/><span>Live candles are not connected</span></div></section><section className="panel"><h3>Token information</h3><SummaryLine label="Network" value={selected.chain}/><SummaryLine label="Contract" value={selected.address}/><SummaryLine label="24h change" value={selected.change+"%"}/><SummaryLine label="Liquidity" value={selected.liquidity}/><button className="outline-button wide" onClick={()=>go("bridge")}>Bridge this token <ArrowUpRight size={14}/></button></section></div></>;
+ const Docs=()=> <><PageIntro kicker="ATLAS GUIDE" title="Documentation" text="Understand how Atlas is designed and what is currently available."/><div className="docs-grid">{[["Getting started","Explore markets, connect a wallet and navigate Atlas."],["Token launches","Token metadata, supported chains, fees and launch flow."],["Trading & swaps","Quotes, slippage, routing and transaction confirmation."],["Liquidity pools","Pool creation, liquidity positions and fees."],["Cross-chain bridge","Routes, transfer status, fees and supported assets."],["Security model","Contracts, permissions, audits and risk disclosures."]].map(([t,d])=><article className="panel doc-card"><BookOpen/><h3>{t}</h3><p className="muted">{d}</p><button className="text-action" onClick={()=>setNotice(t+" documentation is being prepared.")}>Read guide <ArrowUpRight size={13}/></button></article>)}</div></>;
+ const content:Record<Page,()=>JSX.Element>={explore:Explore,launch:Launch,bridge:Bridge,pools:Pools,portfolio:Portfolio,profile:Profile,analytics:Analytics,token:TokenPage,docs:Docs};
+ const Current=content[page];
+ return <div className="app-shell"><Header/><main className="main-container"><div className="top-meta"><span><i className="live-dot"/> Atlas markets <span className="muted">· Prototype</span></span><button onClick={()=>go("docs")}><CircleHelp size={14}/> Docs</button></div>{notice&&<div className="notice-banner"><span>{notice}</span><button onClick={()=>setNotice("")}><X size={15}/></button></div>}<Current/><Footer/></main></div>;
 }
-
-function FeatureCard({ id, icon, title, description }: { id: string; icon: React.ReactNode; title: string; description: string }) {
-  return <a id={id} href="#explore" className="feature-card group"><div className="mb-5 grid h-10 w-10 place-items-center rounded-xl border border-violet-400/20 bg-violet-400/10 text-violet-300">{icon}</div><h3 className="font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-atlas-muted">{description}</p><div className="mt-5 flex items-center gap-1 text-xs text-violet-300">Explore module <ArrowUpRight size={13} className="transition-transform group-hover:translate-x-1" /></div></a>;
-}
-
-export default App;
+function Stat({label,value}:{label:string;value:string}){return <div className="stat-card"><small>{label}</small><b>{value}</b></div>}
+function Feature({icon,title,text,onClick}:{icon:React.ReactNode;title:string;text:string;onClick:()=>void}){return <button className="feature-card" onClick={onClick}><span className="feature-icon">{icon}</span><b>{title}</b><p>{text}</p><span className="text-action">Open module <ArrowUpRight size={13}/></span></button>}
+function PageIntro({kicker,title,text}:{kicker:string;title:string;text:string}){return <div className="page-intro"><span className="eyebrow">{kicker}</span><h1>{title}</h1><p>{text}</p></div>}
+function SummaryLine({label,value}:{label:string;value:string}){return <div className="summary-line"><span>{label}</span><b>{value}</b></div>}
+function Step({n,title,text}:{n:string;title:string;text:string}){return <div className="step-row"><i>{n}</i><span><b>{title}</b><small>{text}</small></span></div>}
