@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import {
-  ArrowDown, ArrowDownUp, ArrowLeftRight, ArrowUpRight, BarChart3, ChevronDown,
-  CircleHelp, Compass, Copy, ExternalLink, Flame, Globe2, Layers3, Menu, Plus,
-  Search, ShieldCheck, Sparkles, Wallet, X, Zap, Clock3, UserRound, Activity,
-  Droplets, Rocket, BookOpen, Settings2, TrendingUp, CircleDollarSign
+  ArrowDownUp, ArrowLeftRight, ArrowUpRight, BarChart3,
+  CircleHelp, Compass, Copy, Flame, Layers3, Menu, Plus,
+  Search, ShieldCheck, Sparkles, Wallet, X, Clock3, UserRound, Activity,
+  Droplets, Rocket, BookOpen, TrendingUp
 } from "lucide-react";
 
 type Page = "explore" | "launch" | "bridge" | "pools" | "portfolio" | "profile" | "analytics" | "docs" | "token";
@@ -43,7 +43,6 @@ export default function App() {
  const [launchChains,setLaunchChains] = useState<string[]>(["Robinhood Chain","Base"]);
  const [fee,setFee] = useState("1");
  const [pair,setPair] = useState("Native coin");
- const [slippage,setSlippage] = useState("1");
  const filtered = useMemo(()=>{
    let list=tokens.filter(t=>(t.name+" "+t.symbol+" "+t.address).toLowerCase().includes(query.toLowerCase()));
    if(tab==="Gainers") list=list.filter(t=>t.change>0);
